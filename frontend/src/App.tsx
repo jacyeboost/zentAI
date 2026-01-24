@@ -208,22 +208,23 @@ const App: React.FC = () => {
       onFeaturedClick={() => { setShowFeatured(true); setShowHistory(false); }}
     >
       <div className="space-y-6 animate-in fade-in duration-700">
-        <header className="flex justify-between items-end">
+        <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6">
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight">Dashboard de Informes</h2>
-            <p className="text-slate-400 mt-1">Análisis dinámico impulsado por IA.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Dashboard de Informes</h2>
+            <p className="text-slate-400 mt-1 text-sm md:text-base">Análisis dinámico impulsado por IA.</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <button 
               onClick={() => { setShowFeatured(!showFeatured); setShowHistory(false); }}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-amber-400 hover:bg-slate-800 transition-all text-sm font-medium"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-amber-400 hover:bg-slate-800 transition-all text-sm font-medium"
             >
               <Star className="w-4 h-4" />
-              Destacados
+              <span className="hidden sm:inline">Destacados</span>
+              <span className="sm:hidden">Dest.</span>
             </button>
             <button 
               onClick={() => { setShowHistory(!showHistory); setShowFeatured(false); }}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium"
             >
               <HistoryIcon className="w-4 h-4" />
               Historial
@@ -233,13 +234,13 @@ const App: React.FC = () => {
               <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button 
                   onClick={() => setViewType('visual')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'visual' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'visual' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   Gráfico
                 </button>
                 <button 
                   onClick={() => setViewType('table')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'table' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'table' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   Datos
                 </button>
@@ -269,27 +270,27 @@ const App: React.FC = () => {
         {/* AI Input Section */}
         <div className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-          <div className="relative p-8 bg-slate-900 border border-slate-800 rounded-2xl">
+          <div className="relative p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-2xl">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <span className={`flex h-2 w-2 rounded-full bg-primary-500 ${loading ? 'animate-ping' : ''}`}></span>
               Solicitar un informe
             </h3>
             <p className="text-slate-400 text-sm mb-6">Describe lo que necesitas analizar usando lenguaje natural.</p>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <input 
                 type="text" 
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
                 placeholder="Ej: '¿Cuáles fueron las ventas del último trimestre por categoría?'"
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-500 transition-all italic text-sm"
+                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-500 transition-all italic text-sm min-w-0"
                 disabled={loading}
               />
               <button 
                 onClick={handleQuery}
                 disabled={loading}
-                className="px-6 py-3 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white rounded-xl font-bold shadow-lg shadow-primary-600/20 transition-all flex items-center gap-2 group-hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white rounded-xl font-bold shadow-lg shadow-primary-600/20 transition-all flex items-center justify-center gap-2 group-hover:scale-105 active:scale-95"
               >
                 {loading ? 'Pensando...' : 'Generar'}
                 {!loading && (
@@ -313,14 +314,14 @@ const App: React.FC = () => {
         {results && (
           <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-bottom duration-500">
             {/* Executive Summary */}
-            <div className="p-6 bg-primary-600/10 border border-primary-500/20 rounded-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-                <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 20 20">
+            <div className="p-5 md:p-6 bg-primary-600/10 border border-primary-500/20 rounded-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none hidden sm:block">
+                <svg className="w-16 h-16 md:w-24 md:h-24" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="flex justify-between items-start mb-3 relative z-10">
-                <h4 className="text-primary-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3 relative z-10">
+                <h4 className="text-primary-400 font-bold flex items-center gap-2 text-[10px] md:text-sm uppercase tracking-wider">
                   <span className="w-2 h-2 rounded-full bg-primary-500"></span>
                   Insight de la IA
                 </h4>
@@ -330,10 +331,10 @@ const App: React.FC = () => {
                   className="flex items-center gap-2 px-3 py-1.5 bg-primary-600/20 hover:bg-primary-600/30 text-primary-400 rounded-lg text-xs font-bold border border-primary-500/30 transition-all disabled:opacity-50"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  {isSaving ? 'Guardando...' : 'Guardar en Historial'}
+                  {isSaving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
-              <p className="text-slate-200 leading-relaxed text-lg font-medium pr-20">
+              <p className="text-slate-200 leading-relaxed text-base md:text-lg font-medium sm:pr-20">
                 {results.metadata.summary}
               </p>
             </div>
