@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pin, Trash2, Calendar, FileText, BarChart3, ChevronRight } from 'lucide-react';
+import Modal from './Modal';
 
 interface Report {
   id: string;
@@ -14,11 +15,13 @@ interface Report {
 
 interface ReportHistoryProps {
   onSelectReport: (report: Report) => void;
+  onlyPinned?: boolean;
 }
 
-const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
+const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport, onlyPinned = false }) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
 
   const fetchReports = async () => {
     try {
@@ -49,10 +52,14 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este reporte?')) return;
+  const confirmDelete = (id: string) => {
+    setReportToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!reportToDelete) return;
     try {
-      await fetch(`http://localhost:3005/api/v1/reports/${id}`, {
+      await fetch(`http://localhost:3005/api/v1/reports/${reportToDelete}`, {
         method: 'DELETE',
       });
       fetchReports();
@@ -70,7 +77,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
       <div className="p-6 border-b border-white/5 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
           <Calendar className="w-5 h-5 text-indigo-400" />
-          Historial
+          {onlyPinned ? 'Destacados' : 'Historial'}
         </h3>
         <button className="text-slate-400 hover:text-white transition-colors">
           <ChevronRight className="w-5 h-5" />
@@ -78,13 +85,17 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {reports.length === 0 ? (
+        {reports.filter(r => onlyPinned ? r.is_pinned : true).length === 0 ? (
           <div className="text-center py-10 opacity-50">
             <FileText className="w-10 h-10 mx-auto mb-2" />
-            <p className="text-sm">No hay reportes guardados</p>
+            <p className="text-sm">
+              {onlyPinned ? 'No hay reportes destacados' : 'No hay reportes guardados'}
+            </p>
           </div>
         ) : (
-          reports.map((report) => (
+          reports
+            .filter(r => onlyPinned ? r.is_pinned : true)
+            .map((report) => (
             <div
               key={report.id}
               className="group bg-white/5 hover:bg-white/10 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer relative"
@@ -109,7 +120,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(report.id);
+                      confirmDelete(report.id);
                     }}
                     className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
                   >
@@ -133,6 +144,17 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport }) => {
           ))
         )}
       </div>
+
+
+      <Modal 
+        isOpen={!!reportToDelete}
+        onClose={() => setReportToDelete(null)}
+        onConfirm={handleDelete}
+        title="Eliminar Reporte"
+        message="¿Estás seguro de que deseas eliminar este reporte del historial? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        isDestructive
+      />
     </div>
   );
 };

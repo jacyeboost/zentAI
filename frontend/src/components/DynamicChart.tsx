@@ -31,6 +31,19 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
   const labelKey = columns.find(col => typeof data[0][col] === 'string') || columns[0];
   const valueKey = columns.find(col => typeof data[0][col] === 'number') || columns[1] || columns[0];
 
+  // Determine format based on column name heuristic
+  const getFormatter = (value: number) => {
+    const key = valueKey.toLowerCase();
+    const isCurrency = ['precio', 'monto', 'venta', 'costo', 'total', 'revenue', 'sales'].some(k => key.includes(k)) && 
+                       !['cantidad', 'unidades', 'quantity', 'count', 'volumen', 'ctd'].some(k => key.includes(k));
+    
+    return new Intl.NumberFormat('es-MX', {
+      style: isCurrency ? 'currency' : 'decimal',
+      currency: 'MXN',
+      maximumFractionDigits: isCurrency ? 2 : 0,
+    }).format(value);
+  };
+
   const renderTooltip = (props: any) => {
     const { active, payload, label } = props;
     if (active && payload && payload.length) {
@@ -38,7 +51,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
         <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl backdrop-blur-md">
           <p className="text-slate-400 text-xs mb-1 font-medium">{label}</p>
           <p className="text-primary-400 font-bold">
-            {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload[0].value))}
+            {getFormatter(Number(payload[0].value))}
           </p>
         </div>
       );

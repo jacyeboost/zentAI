@@ -4,10 +4,13 @@ interface SidebarItemProps {
   label: string;
   icon?: React.ReactNode;
   active?: boolean;
+  onClick?: () => void;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ label, active }) => (
-  <div className={`
+const SidebarItem: React.FC<SidebarItemProps> = ({ label, active, onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`
     flex items-center px-4 py-3 my-1 rounded-xl cursor-pointer transition-all duration-200
     ${active 
       ? 'bg-primary-600/20 text-primary-400 border-l-4 border-primary-500 shadow-sm shadow-primary-500/20' 
@@ -17,14 +20,19 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ label, active }) => (
   </div>
 );
 
-const Sidebar: React.FC = () => {
-  const menuItems = ["Compras", "Mermas", "Producción", "Ventas"];
+interface SidebarProps {
+  onHistoryClick?: () => void;
+  onFeaturedClick?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onHistoryClick, onFeaturedClick }) => {
+  const menuItems = ["Reportes IA"];
   
   return (
     <div className="w-64 h-screen bg-slate-900 border-r border-slate-800 flex flex-col p-4">
       <div className="mb-10 px-4">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-indigo-400 bg-clip-text text-transparent">
-          zentAI
+          zent
         </h1>
         <p className="text-xs text-slate-500 font-medium">BI powered by IA</p>
       </div>
@@ -43,8 +51,8 @@ const Sidebar: React.FC = () => {
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3 px-4">
             Análisis
           </div>
-          <SidebarItem label="Historial" />
-          <SidebarItem label="Destacados" />
+          <SidebarItem label="Historial" onClick={onHistoryClick} />
+          <SidebarItem label="Destacados" onClick={onFeaturedClick} />
         </div>
       </nav>
 

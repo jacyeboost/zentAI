@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import MainLayout from './layout/MainLayout';
 import DynamicChart from './components/DynamicChart';
 import ReportHistory from './components/ReportHistory';
-import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon } from 'lucide-react';
+import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star } from 'lucide-react';
 import { exportToCSV, exportToPDF } from './utils/exportUtils';
+import Toast from './components/Toast';
+import type { ToastType } from './components/Toast';
 
 const App: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -12,7 +14,9 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [viewType, setViewType] = useState<'visual' | 'table'>('visual');
   const [showHistory, setShowHistory] = useState(false);
+  const [showFeatured, setShowFeatured] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const handleQuery = async () => {
     if (!query.trim()) return;
@@ -58,10 +62,11 @@ const App: React.FC = () => {
         }),
       });
       if (response.ok) {
-        alert('Reporte guardado con éxito');
+        setToast({ message: 'Reporte guardado en el historial con éxito', type: 'success' });
       }
     } catch (err) {
       console.error('Error saving report:', err);
+      setToast({ message: 'Error al guardar el reporte', type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -87,17 +92,53 @@ const App: React.FC = () => {
     exportToPDF(results.data, results.metadata.columns, query, results.metadata.summary);
   };
 
+  const handleShare = async () => {
+    if (!results) {
+      setToast({ message: "No hay reporte activo para compartir", type: 'error' });
+      return;
+    }
+    
+    const shareText = `📊 *Reporte zentAI*
+    
+📝 *Consulta:* "${query}"
+
+💡 *Resumen:*
+${results.metadata.summary}
+
+🤖 *Generado por:* Gemini 2.5 Flash
+📅 *Fecha:* ${new Date().toLocaleDateString()}`;
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setToast({ message: "Resumen copiado al portapapeles", type: 'success' });
+    } catch (err) {
+      console.error("Error al copiar:", err);
+      setToast({ message: "Error al copiar al portapapeles", type: 'error' });
+    }
+  };
+
   return (
-    <MainLayout>
+    <MainLayout 
+      onHistoryClick={() => { setShowHistory(true); setShowFeatured(false); }}
+      onFeaturedClick={() => { setShowFeatured(true); setShowHistory(false); }}
+      onShare={handleShare}
+    >
       <div className="space-y-6 animate-in fade-in duration-700">
         <header className="flex justify-between items-end">
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight">Dashboard de Inteligencia</h2>
-            <p className="text-slate-400 mt-1">Análisis dinámico impulsado por Gemini 3.</p>
+            <h2 className="text-3xl font-bold text-white tracking-tight">Dashboard de Informes</h2>
+            <p className="text-slate-400 mt-1">Análisis dinámico impulsado por IA.</p>
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => { setShowFeatured(!showFeatured); setShowHistory(false); }}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-amber-400 hover:bg-slate-800 transition-all text-sm font-medium"
+            >
+              <Star className="w-4 h-4" />
+              Destacados
+            </button>
+            <button 
+              onClick={() => { setShowHistory(!showHistory); setShowFeatured(false); }}
               className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium"
             >
               <HistoryIcon className="w-4 h-4" />
@@ -146,7 +187,7 @@ const App: React.FC = () => {
           <div className="relative p-8 bg-slate-900 border border-slate-800 rounded-2xl">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <span className={`flex h-2 w-2 rounded-full bg-primary-500 ${loading ? 'animate-ping' : ''}`}></span>
-              Consultar a la IA
+              Solicitar un informe
             </h3>
             <p className="text-slate-400 text-sm mb-6">Describe lo que necesitas analizar usando lenguaje natural.</p>
             
@@ -165,7 +206,7 @@ const App: React.FC = () => {
                 disabled={loading}
                 className="px-6 py-3 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white rounded-xl font-bold shadow-lg shadow-primary-600/20 transition-all flex items-center gap-2 group-hover:scale-105 active:scale-95"
               >
-                {loading ? 'Pensando...' : 'Preguntar'}
+                {loading ? 'Pensando...' : 'Generar'}
                 {!loading && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -268,27 +309,40 @@ const App: React.FC = () => {
       </div>
 
       {/* History Panel Overlay */}
-      {showHistory && (
+      {(showHistory || showFeatured) && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setShowHistory(false)}></div>
+          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => { setShowHistory(false); setShowFeatured(false); }}></div>
           <div className="relative z-10 w-96 bg-slate-900 border-l border-white/10 shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-slate-800/50">
               <h3 className="font-bold text-white flex items-center gap-2">
                 <HistoryIcon className="w-5 h-5 text-primary-400" />
-                Historial de Consultas
+                {showFeatured ? 'Reportes Destacados' : 'Historial de Consultas'}
               </h3>
               <button 
-                onClick={() => setShowHistory(false)}
+                onClick={() => { setShowHistory(false); setShowFeatured(false); }}
                 className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <ReportHistory onSelectReport={handleSelectHistoryReport} />
+              <ReportHistory 
+                onSelectReport={(report) => {
+                  handleSelectHistoryReport(report);
+                  setShowFeatured(false);
+                }} 
+                onlyPinned={showFeatured}
+              />
             </div>
           </div>
         </div>
+      )}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
       )}
     </MainLayout>
   );
