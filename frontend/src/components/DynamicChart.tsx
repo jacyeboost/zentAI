@@ -26,15 +26,38 @@ const COLORS = ['#0ea5e9', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316'
 const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
   if (type === 'table' || !data || data.length === 0) return null;
 
+  // Pre-process data: Convert numeric strings to actual numbers
+  const processedData = React.useMemo(() => {
+    return data.map(item => {
+      const newItem: any = { ...item };
+      columns.forEach(col => {
+        const val = item[col];
+        // If it's a string that looks like a number, convert it
+        if (typeof val === 'string' && !isNaN(Number(val)) && val.trim() !== '') {
+          newItem[col] = Number(val);
+        }
+      });
+      return newItem;
+    });
+  }, [data, columns]);
+
   // Attempt to find dynamic keys for X and Y axes
-  // Usually, X is the first string/date column, and Y is the first numeric one
-  const labelKey = columns.find(col => typeof data[0][col] === 'string') || columns[0];
-  const valueKey = columns.find(col => typeof data[0][col] === 'number') || columns[1] || columns[0];
+  // X axis: Prefer 'date', 'month', 'time', 'year', 'category' or first string column
+  const labelKey = columns.find(col => {
+    const lower = col.toLowerCase();
+    return ['date', 'fecha', 'month', 'mes', 'year', 'año', 'time', 'tiempo', 'period', 'periodo'].some(k => lower.includes(k));
+  }) || columns.find(col => typeof processedData[0][col] === 'string') || columns[0];
+
+  // Y axis: Prefer 'sales', 'revenue', 'count', 'total', etc. or first number column
+  const valueKey = columns.find(col => {
+    const lower = col.toLowerCase();
+    return ['sale', 'venta', 'revenue', 'ingreso', 'amount', 'monto', 'total', 'count', 'cantidad', 'sum'].some(k => lower.includes(k));
+  }) || columns.find(col => typeof processedData[0][col] === 'number') || columns[columns.length - 1];
 
   // Determine format based on column name heuristic
   const getFormatter = (value: number) => {
     const key = valueKey.toLowerCase();
-    const isCurrency = ['precio', 'monto', 'venta', 'costo', 'total', 'revenue', 'sales'].some(k => key.includes(k)) && 
+    const isCurrency = ['precio', 'monto', 'venta', 'costo', 'total', 'revenue', 'sales', 'ingreso'].some(k => key.includes(k)) && 
                        !['cantidad', 'unidades', 'quantity', 'count', 'volumen', 'ctd'].some(k => key.includes(k));
     
     return new Intl.NumberFormat('es-MX', {
@@ -63,7 +86,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
     <div className="w-full h-[400px] mt-6 p-4 bg-slate-900/40 border border-slate-800 rounded-2xl animate-in zoom-in duration-500">
       <ResponsiveContainer width="100%" height="100%">
         {type === 'bar' ? (
-          <BarChart data={data}>
+          <BarChart data={processedData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
             <XAxis 
               dataKey={labelKey} 
@@ -101,7 +124,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
             </defs>
           </BarChart>
         ) : type === 'line' ? (
-          <LineChart data={data}>
+          <LineChart data={processedData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
             <XAxis 
               dataKey={labelKey} 
@@ -137,7 +160,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
         ) : (
           <PieChart>
             <Pie
-              data={data}
+              data={processedData}
               cx="50%"
               cy="50%"
               innerRadius={80}
@@ -146,7 +169,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
               dataKey={valueKey}
               nameKey={labelKey}
             >
-              {data.map((_, index) => (
+              {processedData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
