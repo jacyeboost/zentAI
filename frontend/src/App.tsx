@@ -6,6 +6,7 @@ import ReportHistory from './components/ReportHistory';
 import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star } from 'lucide-react';
 import { exportToCSV, exportToPDF } from './utils/exportUtils';
 import Toast from './components/Toast';
+import Modal from './components/Modal';
 import type { ToastType } from './components/Toast';
 
 const App: React.FC = () => {
@@ -18,6 +19,12 @@ const App: React.FC = () => {
   const [showFeatured, setShowFeatured] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Drill Down State
+  const [drillDownData, setDrillDownData] = useState<any>(null);
+  const [loadingDrillDown, setLoadingDrillDown] = useState(false);
+  const [showDrillDown, setShowDrillDown] = useState(false);
+  const [drillDownTitle, setDrillDownTitle] = useState('');
 
   const handleQuery = async () => {
     if (!query.trim()) return;
@@ -148,6 +155,51 @@ const App: React.FC = () => {
     }
   };
   */
+  const handleDrillDown = async (data: any) => {
+    if (!results) return;
+    
+    // Identificar la dimensión (ej. "Invernadero 1") y el valor clickeado
+    // Buscamos la primera columna de texto para usarla como filtro
+    const labelKey = results.metadata.columns.find((col: string) => {
+      const val = results.data[0][col];
+      return typeof val === 'string';
+    }) || results.metadata.columns[0];
+
+    const filterValue = data[labelKey] || data.name || data.payload?.[labelKey]; // Adjust based on data shape from Recharts
+
+    if (!filterValue) return;
+
+    setDrillDownTitle(`Detalle de ${filterValue}`);
+    setLoadingDrillDown(true);
+    setShowDrillDown(true);
+    setDrillDownData(null);
+
+    const drillPrompt = `Muestrame un desglose detallado de las transacciones o registros donde ${labelKey} es '${filterValue}'. Contexto original: ${query}`;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/natural-query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          prompt: drillPrompt, 
+          context: 'ventas' // Idealmente esto vendría del metadata del reporte original
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al obtener detalle');
+      
+      const resData = await response.json();
+      setDrillDownData(resData);
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: 'Error al cargar el detalle', type: 'error' });
+      setShowDrillDown(false);
+    } finally {
+      setLoadingDrillDown(false);
+    }
+  };
 
   return (
     <MainLayout 
@@ -279,13 +331,6 @@ const App: React.FC = () => {
                   <Save className="w-3.5 h-3.5" />
                   {isSaving ? 'Guardando...' : 'Guardar en Historial'}
                 </button>
-                {/* <button 
-                  onClick={handleShare}
-                  className="flex items-center gap-2 px-2 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all ml-2"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  Compartir
-                </button> */}
               </div>
               <p className="text-slate-200 leading-relaxed text-lg font-medium pr-20">
                 {results.metadata.summary}
@@ -298,6 +343,7 @@ const App: React.FC = () => {
                 type={results.metadata.chartType} 
                 data={results.data} 
                 columns={results.metadata.columns} 
+                onDataClick={handleDrillDown}
               />
             ) : (
               <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
@@ -318,13 +364,16 @@ const App: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-800">
                       {results.data.map((row: any, i: number) => (
-                        <tr key={i} className="hover:bg-primary-600/5 transition-colors group">
+                        <tr 
+                          key={i} 
+                          className="hover:bg-primary-600/5 transition-colors group cursor-pointer"
+                          onClick={() => handleDrillDown(row)}
+                        >
                           {results.metadata.columns.map((col: string) => (
                             <td key={col} className="px-6 py-4 text-slate-300 group-hover:text-white transition-colors">
                               {(() => {
                                 const val = row[col];
                                 const num = Number(val);
-                                // Check if it's a valid number (and not an empty string which Number() converts to 0)
                                 if (!isNaN(num) && val !== '' && val !== null) {
                                   return new Intl.NumberFormat('es-MX', { 
                                     style: 'decimal', 
@@ -383,6 +432,73 @@ const App: React.FC = () => {
           onClose={() => setToast(null)} 
         />
       )}
+      <Modal
+        isOpen={showDrillDown}
+        onClose={() => setShowDrillDown(false)}
+        title={drillDownTitle}
+        confirmLabel="Cerrar"
+        cancelLabel=""
+        onConfirm={() => setShowDrillDown(false)}
+      >
+        {loadingDrillDown ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
+            <p className="text-slate-400 animate-pulse">Analizando datos al detalle...</p>
+          </div>
+        ) : drillDownData ? (
+          <div className="mt-4">
+             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 mb-6 max-h-32 overflow-y-auto">
+               <p className="text-slate-300 text-sm italic">
+                  {drillDownData.metadata.summary}
+               </p>
+             </div>
+             
+             {/* Re-use DynamicChart for the drill-down view (mostly likely a table or another chart) */}
+             <div className="max-h-[60vh] overflow-y-auto">
+                <DynamicChart 
+                  type={drillDownData.metadata.chartType} // Or force 'table'
+                  data={drillDownData.data}
+                  columns={drillDownData.metadata.columns}
+                />
+                 {/* Fallback to table if chart is not ideal or just show table always for drill down? 
+                     Let's show what the AI thinks is best, but maybe force table if user wants details.
+                     For now, dynamic is fine. */}
+                  {drillDownData.metadata.chartType !== 'table' && (
+                    <div className="mt-8">
+                       <h5 className="text-slate-400 text-xs uppercase font-bold mb-2">Datos Tabulares</h5>
+                       <div className="overflow-x-auto border border-slate-800 rounded-lg">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-800/50 text-slate-500">
+                             <tr>
+                                {drillDownData.metadata.columns.map((col: string) => (
+                                  <th key={col} className="px-4 py-2">{col}</th>
+                                ))}
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800">
+                            {drillDownData.data.map((row: any, i: number) => (
+                              <tr key={i} className="hover:bg-white/5">
+                                 {drillDownData.metadata.columns.map((col: string) => (
+                                    <td key={col} className="px-4 py-2 text-slate-300">
+                                      {row[col]}
+                                    </td>
+                                 ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                       </div>
+                    </div>
+                  )}
+             </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-slate-500">
+            No se encontraron detalles adicionales.
+          </div>
+        )}
+      </Modal>
+
     </MainLayout>
   );
 };

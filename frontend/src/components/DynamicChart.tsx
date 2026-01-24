@@ -19,11 +19,12 @@ interface DynamicChartProps {
   type: 'bar' | 'line' | 'pie' | 'table';
   data: any[];
   columns: string[];
+  onDataClick?: (data: any) => void;
 }
 
 const COLORS = ['#0ea5e9', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e'];
 
-const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
+const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns, onDataClick }) => {
   if (type === 'table' || !data || data.length === 0) return null;
 
   // Pre-process data: Convert numeric strings to actual numbers
@@ -115,6 +116,8 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
               fill="url(#primaryGradient)" 
               radius={[6, 6, 0, 0]} 
               barSize={40}
+              onClick={(data) => onDataClick && onDataClick(data)}
+              className={onDataClick ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
             />
             <defs>
               <linearGradient id="primaryGradient" x1="0" y1="0" x2="0" y2="1">
@@ -154,7 +157,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
               stroke="#0ea5e9" 
               strokeWidth={3} 
               dot={{ r: 4, fill: '#0ea5e9', strokeWidth: 2, stroke: '#0f172a' }}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              activeDot={{ r: 6, strokeWidth: 0, onClick: (_, payload) => onDataClick && onDataClick(payload.payload) }}
             />
           </LineChart>
         ) : (
@@ -168,6 +171,8 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
               paddingAngle={5}
               dataKey={valueKey}
               nameKey={labelKey}
+              onClick={(data) => onDataClick && onDataClick(data)}
+              className={onDataClick ? "cursor-pointer" : ""}
             >
               {processedData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
