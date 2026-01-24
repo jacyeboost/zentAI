@@ -4,7 +4,7 @@ interface TopbarProps {
   onShare?: () => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ onShare }) => {
+const Topbar: React.FC<TopbarProps> = () => {
   return (
     <div className="h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex-1 max-w-xl">

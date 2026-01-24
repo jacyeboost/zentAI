@@ -70,7 +70,7 @@ export const exportToPDF = (data: any[], columns: string[], title: string, summa
     body: tableRows,
     theme: 'grid',
     headStyles: { 
-      fillColor: primaryColor,
+      fillColor: primaryColor as any,
       textColor: [255, 255, 255],
       fontSize: 10,
       fontStyle: 'bold'

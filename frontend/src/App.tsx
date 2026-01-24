@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import MainLayout from './layout/MainLayout';
 import DynamicChart from './components/DynamicChart';
 import ReportHistory from './components/ReportHistory';
-import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star, Share2 } from 'lucide-react';
+// import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star, Share2 } from 'lucide-react';
+import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star } from 'lucide-react';
 import { exportToCSV, exportToPDF } from './utils/exportUtils';
 import Toast from './components/Toast';
 import type { ToastType } from './components/Toast';
@@ -92,6 +93,7 @@ const App: React.FC = () => {
     exportToPDF(results.data, results.metadata.columns, query, results.metadata.summary);
   };
 
+  /*
   const handleShare = async () => {
     if (!results) {
       setToast({ message: "No hay reporte activo para compartir", type: 'error' });
@@ -123,7 +125,7 @@ const App: React.FC = () => {
         reportId = savedReport.id;
         
         // Update local state to reflect saved status
-        setResults(prev => prev ? { ...prev, id: reportId } : null);
+        setResults((prev: any) => prev ? { ...prev, id: reportId } : null);
       } catch (err) {
         console.error('Error auto-saving for share:', err);
         setToast({ message: "Error al guardar para compartir", type: 'error' });
@@ -145,6 +147,7 @@ const App: React.FC = () => {
       setToast({ message: "Error al copiar enlace", type: 'error' });
     }
   };
+  */
 
   return (
     <MainLayout 

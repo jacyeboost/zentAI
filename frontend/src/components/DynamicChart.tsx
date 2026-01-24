@@ -146,7 +146,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns }) => {
               dataKey={valueKey}
               nameKey={labelKey}
             >
-              {data.map((entry, index) => (
+              {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
