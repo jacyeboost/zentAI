@@ -31,10 +31,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onHistoryClick, onFeaturedClick }) =>
   return (
     <div className="w-64 h-screen bg-slate-900 border-r border-slate-800 flex flex-col p-4">
       <div className="mb-10 px-4">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-indigo-400 bg-clip-text text-transparent">
-          zent
-        </h1>
-        <p className="text-xs text-slate-500 font-medium">BI powered by IA</p>
+        <img src="/logo.png" alt="zent" className="h-24 w-auto mb-2" />
+        <p className="text-xs text-slate-500 font-medium">BI potenciado con IA</p>
       </div>
 
       <nav className="flex-1 space-y-6">

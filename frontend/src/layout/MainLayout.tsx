@@ -6,10 +6,10 @@ interface MainLayoutProps {
   children: React.ReactNode;
   onHistoryClick?: () => void;
   onFeaturedClick?: () => void;
-  onShare?: () => void;
+  // onShare?: () => void;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, onHistoryClick, onFeaturedClick, onShare }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, onHistoryClick, onFeaturedClick }) => {
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-200 selection:bg-primary-500/30">
       {/* Sidebar - Fixed */}
