@@ -405,16 +405,16 @@ const App: React.FC = () => {
             <p className="text-slate-400 animate-pulse">Analizando detalle de información...</p>
           </div>
         ) : drillDownData ? (
-          <div className="mt-2 space-y-6">
-             <div className="flex justify-between items-start gap-4">
-                <div className="bg-primary-500/5 p-4 rounded-xl border border-primary-500/10 flex-1">
-                  <p className="text-slate-300 text-sm leading-relaxed italic">
+          <div className="mt-2 space-y-4 md:space-y-6">
+             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div className="bg-primary-500/5 p-3 md:p-4 rounded-xl border border-primary-500/10 w-full sm:flex-1">
+                  <p className="text-slate-300 text-xs md:text-sm leading-relaxed italic">
                       {drillDownData.metadata.summary}
                   </p>
                 </div>
                 <button 
                   onClick={() => exportToCSV(drillDownData.data, drillDownData.metadata.columns, `${drillDownTitle}.csv`)}
-                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                   Exportar CSV

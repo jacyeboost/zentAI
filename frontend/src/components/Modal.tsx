@@ -33,15 +33,15 @@ const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
       ></div>
       
-      <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-4xl w-full p-6 animate-in zoom-in-95 duration-200">
+      <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-4xl w-full p-4 md:p-6 animate-in zoom-in-95 duration-200 max-h-[95vh] flex flex-col overflow-hidden">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors"
+          className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors z-[70]"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 h-full overflow-y-auto custom-scrollbar pr-1">
           {message && (
              <div className={`p-3 rounded-xl ${isDestructive ? 'bg-rose-500/10 text-rose-400' : 'bg-primary-500/10 text-primary-400'}`}>
               <AlertTriangle className="w-6 h-6" />
