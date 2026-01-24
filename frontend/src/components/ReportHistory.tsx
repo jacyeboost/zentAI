@@ -25,7 +25,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport, onlyPinne
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('http://localhost:3005/api/v1/reports');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports`);
       const data = await response.json();
       setReports(data);
     } catch (error) {
@@ -41,7 +41,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport, onlyPinne
 
   const handleTogglePin = async (id: string, currentPin: boolean) => {
     try {
-      await fetch(`http://localhost:3005/api/v1/reports/${id}/pin`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports/${id}/pin`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_pinned: !currentPin }),
@@ -59,7 +59,7 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport, onlyPinne
   const handleDelete = async () => {
     if (!reportToDelete) return;
     try {
-      await fetch(`http://localhost:3005/api/v1/reports/${reportToDelete}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports/${reportToDelete}`, {
         method: 'DELETE',
       });
       fetchReports();

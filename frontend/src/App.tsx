@@ -24,7 +24,7 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3005/api/v1/natural-query', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/natural-query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const App: React.FC = () => {
     if (!results) return;
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:3005/api/v1/reports', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +104,7 @@ const App: React.FC = () => {
     if (!reportId) {
       setIsSaving(true);
       try {
-        const response = await fetch('http://localhost:3005/api/v1/reports', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
