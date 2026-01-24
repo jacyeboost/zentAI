@@ -24,7 +24,7 @@ interface SidebarProps {
   onHistoryClick?: () => void;
   onFeaturedClick?: () => void;
 }
-
+ 
 const Sidebar: React.FC<SidebarProps> = ({ onHistoryClick, onFeaturedClick }) => {
   const menuItems = ["Reportes IA"];
   
