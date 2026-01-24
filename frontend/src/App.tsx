@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import MainLayout from './layout/MainLayout';
 import DynamicChart from './components/DynamicChart';
 import ReportHistory from './components/ReportHistory';
-import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star } from 'lucide-react';
+import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextIcon, Star, Share2 } from 'lucide-react';
 import { exportToCSV, exportToPDF } from './utils/exportUtils';
 import Toast from './components/Toast';
 import type { ToastType } from './components/Toast';
@@ -97,23 +97,52 @@ const App: React.FC = () => {
       setToast({ message: "No hay reporte activo para compartir", type: 'error' });
       return;
     }
-    
-    const shareText = `📊 *Reporte zentAI*
-    
-📝 *Consulta:* "${query}"
 
-💡 *Resumen:*
-${results.metadata.summary}
+    let reportId = results.id;
 
-🤖 *Generado por:* Gemini 2.5 Flash
-📅 *Fecha:* ${new Date().toLocaleDateString()}`;
+    // If not saved, save it first
+    if (!reportId) {
+      setIsSaving(true);
+      try {
+        const response = await fetch('http://localhost:3005/api/v1/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt_text: query,
+            sql_text: results.metadata.sql,
+            chart_type: results.metadata.recommendedChartType,
+            module: 'ventas', 
+            summary: results.metadata.summary,
+            is_pinned: false
+          }),
+        });
+        
+        if (!response.ok) throw new Error('Failed to auto-save');
+        
+        const savedReport = await response.json();
+        reportId = savedReport.id;
+        
+        // Update local state to reflect saved status
+        setResults(prev => prev ? { ...prev, id: reportId } : null);
+      } catch (err) {
+        console.error('Error auto-saving for share:', err);
+        setToast({ message: "Error al guardar para compartir", type: 'error' });
+        setIsSaving(false);
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
+    
+    // Generate Share Link
+    const shareUrl = `${window.location.origin}/share/${reportId}`;
 
     try {
-      await navigator.clipboard.writeText(shareText);
-      setToast({ message: "Resumen copiado al portapapeles", type: 'success' });
+      await navigator.clipboard.writeText(shareUrl);
+      setToast({ message: "Enlace copiado al portapapeles", type: 'success' });
     } catch (err) {
       console.error("Error al copiar:", err);
-      setToast({ message: "Error al copiar al portapapeles", type: 'error' });
+      setToast({ message: "Error al copiar enlace", type: 'error' });
     }
   };
 
@@ -121,7 +150,6 @@ ${results.metadata.summary}
     <MainLayout 
       onHistoryClick={() => { setShowHistory(true); setShowFeatured(false); }}
       onFeaturedClick={() => { setShowFeatured(true); setShowHistory(false); }}
-      onShare={handleShare}
     >
       <div className="space-y-6 animate-in fade-in duration-700">
         <header className="flex justify-between items-end">
@@ -144,6 +172,7 @@ ${results.metadata.summary}
               <HistoryIcon className="w-4 h-4" />
               Historial
             </button>
+
             {results && (
               <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button 
@@ -229,12 +258,12 @@ ${results.metadata.summary}
           <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-bottom duration-500">
             {/* Executive Summary */}
             <div className="p-6 bg-primary-600/10 border border-primary-500/20 rounded-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
                 <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-start mb-3 relative z-10">
                 <h4 className="text-primary-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
                   <span className="w-2 h-2 rounded-full bg-primary-500"></span>
                   Insight de la IA
@@ -247,6 +276,13 @@ ${results.metadata.summary}
                   <Save className="w-3.5 h-3.5" />
                   {isSaving ? 'Guardando...' : 'Guardar en Historial'}
                 </button>
+                {/* <button 
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-2 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all ml-2"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  Compartir
+                </button> */}
               </div>
               <p className="text-slate-200 leading-relaxed text-lg font-medium pr-20">
                 {results.metadata.summary}

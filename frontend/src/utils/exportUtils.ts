@@ -1,12 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Extend jsPDF with autotable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 export const exportToCSV = (data: any[], columns: string[], fileName: string = 'export.csv') => {
   if (!data || data.length === 0) return;
@@ -42,7 +35,7 @@ export const exportToPDF = (data: any[], columns: string[], title: string, summa
   // Header Title
   doc.setFontSize(22);
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.text('zentAI - Reporte de Inteligencia', 14, 20);
+  doc.text('zent - Reporte potenciado con IA', 14, 20);
 
   // subtitle/date
   doc.setFontSize(10);
@@ -71,7 +64,7 @@ export const exportToPDF = (data: any[], columns: string[], title: string, summa
   // Data Table
   const tableRows = data.map(row => columns.map(col => row[col]));
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: 90,
     head: [columns],
     body: tableRows,

@@ -63,6 +63,11 @@ export class ReportsService {
     return data[0];
   }
 
+  async share(id: string) {
+    const shareUrl = `${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173'}/share/${id}`;
+    return { url: shareUrl };
+  }
+
   async remove(id: string) {
     const { error } = await this.supabase
       .from('reports_history')

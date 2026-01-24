@@ -28,6 +28,11 @@ export class ReportsController {
     return this.reportsService.togglePin(id, isPinned);
   }
 
+  @Post(':id/share')
+  share(@Param('id') id: string) {
+    return this.reportsService.share(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.reportsService.remove(id);
