@@ -157,7 +157,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ type, data, columns, onData
               stroke="#0ea5e9" 
               strokeWidth={3} 
               dot={{ r: 4, fill: '#0ea5e9', strokeWidth: 2, stroke: '#0f172a' }}
-              activeDot={{ r: 6, strokeWidth: 0, onClick: (_, payload) => onDataClick && onDataClick(payload.payload) }}
+              activeDot={{ r: 6, strokeWidth: 0, onClick: (_: any, payload: any) => onDataClick && onDataClick(payload.payload) }}
             />
           </LineChart>
         ) : (
