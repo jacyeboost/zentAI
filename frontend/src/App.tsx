@@ -7,6 +7,7 @@ import { Save, History as HistoryIcon, X, FileSpreadsheet, FileText as FileTextI
 import { exportToCSV, exportToPDF } from './utils/exportUtils';
 import Toast from './components/Toast';
 import Modal from './components/Modal';
+import DataTable from './components/DataTable';
 import type { ToastType } from './components/Toast';
 
 const App: React.FC = () => {
@@ -174,7 +175,7 @@ const App: React.FC = () => {
     setShowDrillDown(true);
     setDrillDownData(null);
 
-    const drillPrompt = `Muestrame un desglose detallado de las transacciones o registros donde ${labelKey} es '${filterValue}'. Contexto original: ${query}`;
+    const drillPrompt = `Muestrame los registros individuales detallados (base de datos cruda) donde ${labelKey} es '${filterValue}'. Incluye todas las columnas relevantes para entender el detalle de estas transacciones. Contexto original de la búsqueda: ${query}`;
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/natural-query`, {
@@ -346,51 +347,11 @@ const App: React.FC = () => {
                 onDataClick={handleDrillDown}
               />
             ) : (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                  <h4 className="font-bold text-white text-sm">Explorador de Datos</h4>
-                  <div className="text-[10px] text-slate-500 font-mono bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
-                    {results.metadata.sql}
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-800/30 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
-                      <tr>
-                        {results.metadata.columns.map((col: string) => (
-                          <th key={col} className="px-6 py-4">{col}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {results.data.map((row: any, i: number) => (
-                        <tr 
-                          key={i} 
-                          className="hover:bg-primary-600/5 transition-colors group cursor-pointer"
-                          onClick={() => handleDrillDown(row)}
-                        >
-                          {results.metadata.columns.map((col: string) => (
-                            <td key={col} className="px-6 py-4 text-slate-300 group-hover:text-white transition-colors">
-                              {(() => {
-                                const val = row[col];
-                                const num = Number(val);
-                                if (!isNaN(num) && val !== '' && val !== null) {
-                                  return new Intl.NumberFormat('es-MX', { 
-                                    style: 'decimal', 
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2 
-                                  }).format(num);
-                                }
-                                return val;
-                              })()}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <DataTable 
+                data={results.data} 
+                columns={results.metadata.columns} 
+                onRowClick={handleDrillDown}
+              />
             )}
           </div>
         )}
@@ -436,60 +397,50 @@ const App: React.FC = () => {
         isOpen={showDrillDown}
         onClose={() => setShowDrillDown(false)}
         title={drillDownTitle}
-        confirmLabel="Cerrar"
-        cancelLabel=""
-        onConfirm={() => setShowDrillDown(false)}
       >
         {loadingDrillDown ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
-            <p className="text-slate-400 animate-pulse">Analizando datos al detalle...</p>
+            <p className="text-slate-400 animate-pulse">Analizando registros al detalle...</p>
           </div>
         ) : drillDownData ? (
-          <div className="mt-4">
-             <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 mb-6 max-h-32 overflow-y-auto">
-               <p className="text-slate-300 text-sm italic">
-                  {drillDownData.metadata.summary}
-               </p>
+          <div className="mt-2 space-y-6">
+             <div className="flex justify-between items-start gap-4">
+                <div className="bg-primary-500/5 p-4 rounded-xl border border-primary-500/10 flex-1">
+                  <p className="text-slate-300 text-sm leading-relaxed italic">
+                      {drillDownData.metadata.summary}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => exportToCSV(drillDownData.data, drillDownData.metadata.columns, `${drillDownTitle}.csv`)}
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Exportar CSV
+                </button>
              </div>
              
-             {/* Re-use DynamicChart for the drill-down view (mostly likely a table or another chart) */}
-             <div className="max-h-[60vh] overflow-y-auto">
-                <DynamicChart 
-                  type={drillDownData.metadata.chartType} // Or force 'table'
-                  data={drillDownData.data}
-                  columns={drillDownData.metadata.columns}
-                />
-                 {/* Fallback to table if chart is not ideal or just show table always for drill down? 
-                     Let's show what the AI thinks is best, but maybe force table if user wants details.
-                     For now, dynamic is fine. */}
-                  {drillDownData.metadata.chartType !== 'table' && (
-                    <div className="mt-8">
-                       <h5 className="text-slate-400 text-xs uppercase font-bold mb-2">Datos Tabulares</h5>
-                       <div className="overflow-x-auto border border-slate-800 rounded-lg">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-800/50 text-slate-500">
-                             <tr>
-                                {drillDownData.metadata.columns.map((col: string) => (
-                                  <th key={col} className="px-4 py-2">{col}</th>
-                                ))}
-                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800">
-                            {drillDownData.data.map((row: any, i: number) => (
-                              <tr key={i} className="hover:bg-white/5">
-                                 {drillDownData.metadata.columns.map((col: string) => (
-                                    <td key={col} className="px-4 py-2 text-slate-300">
-                                      {row[col]}
-                                    </td>
-                                 ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                       </div>
-                    </div>
-                  )}
+             <div className="space-y-4">
+                {drillDownData.metadata.chartType !== 'table' && (
+                  <div className="h-[300px]">
+                    <DynamicChart 
+                      type={drillDownData.metadata.chartType}
+                      data={drillDownData.data}
+                      columns={drillDownData.metadata.columns}
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <h5 className="text-slate-400 text-[10px] uppercase font-bold tracking-widest pl-1">
+                    Registros que conforman este dato
+                  </h5>
+                  <DataTable 
+                    data={drillDownData.data}
+                    columns={drillDownData.metadata.columns}
+                    maxHeight="400px"
+                  />
+                </div>
              </div>
           </div>
         ) : (
