@@ -26,8 +26,16 @@ const ReportHistory: React.FC<ReportHistoryProps> = ({ onSelectReport, onlyPinne
   const fetchReports = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3005'}/api/v1/reports`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json();
-      setReports(data);
+      if (Array.isArray(data)) {
+        setReports(data);
+      } else {
+        setReports([]);
+        console.error('Formato de datos inválido:', data);
+      }
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
